@@ -1,3 +1,4 @@
+
 # ============================================================
 # KaiwaBuddy - Japanese N5 Learning Engine
 # ============================================================
@@ -64,7 +65,7 @@ LESSON_1_PATTERNS = [
     {
         "pattern": "N1 の N2",
         "meaning": "N2 related to / belonging to N1.",
-        "example": "SJIT no gakusei."
+        "example": "Daigaku no gakusei."
     },
 ]
 
@@ -189,17 +190,42 @@ def normalize(text):
     return text
 
 
+def _script_normalize(text):
+    return re.sub(r"[\s。！!？?、,]", "", str(text).strip())
+
+
 # ============================================================
-# VOCABULARY
+# SAFE FOLLOW-UP QUESTIONS
+# ============================================================
+
+def get_safe_followup(topic):
+    options = {
+        "gakusei": [
+            "Anata wa gakusei desu ka?",
+            "Gakusei desu ka?",
+        ],
+        "sensei": ["Anata wa sensei desu ka?"],
+        "isha": ["Anata wa isha desu ka?"],
+        "kaishain": ["Anata wa kaishain desu ka?"],
+    }
+
+    return random.choice(
+        options.get(
+            topic,
+            ["Can you make another simple Japanese sentence?"],
+        )
+    )
+
+
+# ============================================================
+# VOCABULARY ANALYSIS
 # ============================================================
 
 def analyze_vocabulary(text):
     normalized = normalize(text)
 
     for item in LESSON_1_VOCABULARY:
-
         if normalized == normalize(item["japanese"]):
-
             return {
                 "type": "vocabulary",
                 "meaning": item["english"],
@@ -217,63 +243,26 @@ def analyze_vocabulary(text):
 
 
 # ============================================================
-# SAFE FOLLOW-UPS
-# ============================================================
-
-CONVERSATION_FOLLOWUPS = {
-    "gakusei": [
-        "Gakusei desu ka?",
-        "Anata wa gakusei desu ka?",
-    ],
-    "sensei": [
-        "Sensei desu ka?",
-        "Anata wa sensei desu ka?",
-    ],
-    "isha": [
-        "Isha desu ka?",
-        "Anata wa isha desu ka?",
-    ],
-    "kaishain": [
-        "Kaishain desu ka?",
-        "Anata wa kaishain desu ka?",
-    ],
-    "shain": [
-        "Shain desu ka?",
-    ],
-}
-
-
-def get_safe_followup(topic):
-
-    if topic in CONVERSATION_FOLLOWUPS:
-        return random.choice(CONVERSATION_FOLLOWUPS[topic])
-
-    return "Can you make another simple Japanese sentence?"
-
-
-# ============================================================
 # N は N です
 # ============================================================
 
 def analyze_noun_desu(text):
-
     normalized = normalize(text)
 
     match = re.fullmatch(
         r"(.+?) wa (.+?) desu",
-        normalized
+        normalized,
     )
 
     if not match:
         return None
 
-    subject = match.group(1).strip()
-    predicate = match.group(2).strip()
+    subject, predicate = match.groups()
 
-    if subject not in LESSON_1_NOUNS:
-        return None
-
-    if predicate not in LESSON_1_NOUNS:
+    if (
+        subject not in LESSON_1_NOUNS
+        or predicate not in LESSON_1_NOUNS
+    ):
         return None
 
     return {
@@ -286,7 +275,7 @@ def analyze_noun_desu(text):
         "explanation": (
             f"'{subject}' is the topic and "
             f"'{predicate}' describes it. "
-            "は (wa) marks the topic and です makes "
+            "は (wa) marks the topic; です makes "
             "a polite statement."
         ),
         "followup": get_safe_followup(predicate),
@@ -299,24 +288,23 @@ def analyze_noun_desu(text):
 # ============================================================
 
 def analyze_noun_janai(text):
-
     normalized = normalize(text)
 
     match = re.fullmatch(
-        r"(.+?) wa (.+?) (?:ja arimasen|jaarimasen)",
-        normalized
+        r"(.+?) wa (.+?) "
+        r"(?:ja arimasen|jaarimasen|dewa arimasen)",
+        normalized,
     )
 
     if not match:
         return None
 
-    subject = match.group(1).strip()
-    predicate = match.group(2).strip()
+    subject, predicate = match.groups()
 
-    if subject not in LESSON_1_NOUNS:
-        return None
-
-    if predicate not in LESSON_1_NOUNS:
+    if (
+        subject not in LESSON_1_NOUNS
+        or predicate not in LESSON_1_NOUNS
+    ):
         return None
 
     return {
@@ -327,37 +315,36 @@ def analyze_noun_janai(text):
         ),
         "grammar": "N は N じゃありません",
         "explanation": (
-            "じゃありません is the negative form "
-            "of です for noun sentences."
+            "じゃありません is the polite negative form "
+            "used in noun sentences. "
+            "ではありません (dewa arimasen) is a more "
+            "formal alternative."
         ),
         "followup": get_safe_followup(predicate),
         "next_topic": None,
     }
-
 
 # ============================================================
 # N は N ですか
 # ============================================================
 
 def analyze_question(text):
-
     normalized = normalize(text)
 
     match = re.fullmatch(
         r"(.+?) wa (.+?) desu ka",
-        normalized
+        normalized,
     )
 
     if not match:
         return None
 
-    subject = match.group(1).strip()
-    predicate = match.group(2).strip()
+    subject, predicate = match.groups()
 
-    if subject not in LESSON_1_NOUNS:
-        return None
-
-    if predicate not in LESSON_1_NOUNS:
+    if (
+        subject not in LESSON_1_NOUNS
+        or predicate not in LESSON_1_NOUNS
+    ):
         return None
 
     return {
@@ -380,24 +367,22 @@ def analyze_question(text):
 # ============================================================
 
 def analyze_mo_pattern(text):
-
     normalized = normalize(text)
 
     match = re.fullmatch(
         r"(.+?) mo (.+?) desu",
-        normalized
+        normalized,
     )
 
     if not match:
         return None
 
-    subject = match.group(1).strip()
-    predicate = match.group(2).strip()
+    subject, predicate = match.groups()
 
-    if subject not in LESSON_1_NOUNS:
-        return None
-
-    if predicate not in LESSON_1_NOUNS:
+    if (
+        subject not in LESSON_1_NOUNS
+        or predicate not in LESSON_1_NOUNS
+    ):
         return None
 
     return {
@@ -408,9 +393,11 @@ def analyze_mo_pattern(text):
         ),
         "grammar": "N も N です",
         "explanation": (
-            "も means 'also' and replaces は."
+            "も (mo) means 'also' or 'too' and replaces は "
+            "when saying something is also true."
         ),
         "followup": get_safe_followup(predicate),
+        "next_topic": None,
     }
 
 
@@ -419,143 +406,74 @@ def analyze_mo_pattern(text):
 # ============================================================
 
 def analyze_no_pattern(text):
-
     normalized = normalize(text)
 
-    match = re.fullmatch(
-        r"(.+?) wa (.+?) no (.+?) desu",
-        normalized
-    )
+    match = re.fullmatch(r"(.+?) no (.+)", normalized)
 
     if not match:
         return None
 
-    subject = match.group(1).strip()
-    organization = match.group(2).strip()
-    noun = match.group(3).strip()
+    first, second = match.groups()
 
-    if subject not in LESSON_1_NOUNS:
-        return None
-
-    if noun not in LESSON_1_NOUNS:
+    if (
+        first not in LESSON_1_NOUNS
+        or second not in LESSON_1_NOUNS
+    ):
         return None
 
     return {
         "type": "grammar",
         "meaning": (
-            f"{LESSON_1_NOUNS[subject]} is a "
-            f"{LESSON_1_NOUNS[noun]} of {organization}."
+            f"{LESSON_1_NOUNS[second]} related to "
+            f"{LESSON_1_NOUNS[first]}."
         ),
-        "grammar": "N1 は N2 の N3 です",
+        "grammar": "N1 の N2",
         "explanation": (
-            "の connects two nouns and shows a relationship "
-            "between them."
+            "の (no) connects nouns and can show possession, "
+            "affiliation, or another relationship."
         ),
-        "followup": (
-            f"Can you make another sentence using "
-            f"'{organization} no {noun}'?"
-        ),
+        "followup": "Try making another sentence using 'no'.",
+        "next_topic": None,
     }
 
 
 # ============================================================
-# COMMON MISTAKE DETECTOR
+# COMMON MISTAKE CHECKER
 # ============================================================
 
 def check_common_mistake(text):
-
     normalized = normalize(text)
 
-    # desuu / desuuu / desuuuu...
-    if re.search(r"\bdesu{2,}\b", normalized):
-
-        corrected = re.sub(
-            r"\bdesu{2,}\b",
-            "desu",
-            normalized
-        )
-
-        corrected_result = analyze_noun_desu(corrected)
-
-        if corrected_result:
-
-            return {
-                "type": "mistake",
-                "meaning": corrected_result["meaning"],
-                "grammar": corrected_result["grammar"],
-                "explanation": (
-                    "Small spelling mistake: "
-                    "'desuu' should be written as 'desu' "
-                    "in standard romanization."
-                ),
-                "correction": corrected,
-                "followup": corrected_result["followup"],
-            }
-
+    if (
+        "gakusei ja arimasen" in normalized
+        and "watashi wa" in normalized
+    ):
         return {
-            "type": "mistake",
-            "meaning": "Your sentence has a small spelling mistake.",
-            "grammar": "です (desu)",
+            "type": "grammar",
+            "meaning": "I am not a student.",
+            "grammar": "N は N じゃありません",
             "explanation": (
-                "Use 'desu' in standard romanization."
+                "じゃありません is the polite negative form "
+                "of です for noun sentences."
             ),
-            "correction": corrected,
-            "followup": "Try the corrected sentence again.",
+            "followup": "Anata wa gakusei desu ka?",
+            "next_topic": None,
         }
 
-    # des -> desu
-    if re.search(r"\bdes\b", normalized):
-
-        corrected = re.sub(
-            r"\bdes\b",
-            "desu",
-            normalized
-        )
-
-        corrected_result = analyze_noun_desu(corrected)
-
-        if corrected_result:
-
-            return {
-                "type": "mistake",
-                "meaning": corrected_result["meaning"],
-                "grammar": corrected_result["grammar"],
-                "explanation": (
-                    "Small spelling mistake: "
-                    "'des' should be written as 'desu'."
-                ),
-                "correction": corrected,
-                "followup": corrected_result["followup"],
-            }
-
+    if (
+        "gakusei desu" in normalized
+        and "watashi mo" in normalized
+    ):
         return {
-            "type": "mistake",
-            "meaning": "Your sentence has a small spelling mistake.",
-            "grammar": "です (desu)",
+            "type": "grammar",
+            "meaning": "I am also a student.",
+            "grammar": "N も N です",
             "explanation": (
-                "Use 'desu', not 'des'."
+                "も means 'also' or 'too' and replaces は "
+                "in this pattern."
             ),
-            "correction": corrected,
-            "followup": "Try the corrected sentence again.",
-        }
-
-    # arimasn -> arimasen
-    if "arimasn" in normalized:
-
-        corrected = normalized.replace(
-            "arimasn",
-            "arimasen"
-        )
-
-        return {
-            "type": "mistake",
-            "meaning": "Your sentence has a small spelling mistake.",
-            "grammar": "じゃありません",
-            "explanation": (
-                "The correct romanization is 'arimasen'."
-            ),
-            "correction": corrected,
-            "followup": "Try the corrected sentence again.",
+            "followup": "Anata mo gakusei desu ka?",
+            "next_topic": None,
         }
 
     return None
@@ -566,104 +484,65 @@ def check_common_mistake(text):
 # ============================================================
 
 def analyze_conversation_answer(text, expected_topic):
-
     normalized = normalize(text)
 
-    topic_data = {
-        "student": ("gakusei", "student"),
-        "teacher": ("sensei", "teacher"),
-        "doctor": ("isha", "doctor"),
-        "company_employee": ("kaishain", "company employee"),
-    }
+    for item in LESSON_1_VOCABULARY:
+        word = normalize(item["japanese"])
 
-    if expected_topic not in topic_data:
-        return None
-
-    japanese_word, english_word = topic_data[expected_topic]
-
-    if normalized in ["hai", "hai desu"]:
-
-        return {
-            "type": "conversation",
-            "meaning": f"Yes, I am a {english_word}.",
-            "grammar": "はい + N です",
-            "explanation": (
-                f"'{japanese_word}' means '{english_word}'."
-            ),
-            "followup": get_safe_followup(japanese_word),
-            "next_topic": expected_topic,
-        }
-
-    positive_patterns = [
-        f"hai {japanese_word} desu",
-        f"watashi wa {japanese_word} desu",
-    ]
-
-    if normalized in positive_patterns:
-
-        return {
-            "type": "conversation",
-            "meaning": f"Yes, I am a {english_word}.",
-            "grammar": "N は N です",
-            "explanation": (
-                f"'{japanese_word}' means '{english_word}'."
-            ),
-            "followup": get_safe_followup(japanese_word),
-            "next_topic": expected_topic,
-        }
+        if (
+            word
+            and word in normalized
+            and (
+                normalized.startswith("hai")
+                or normalized.startswith("watashi wa")
+                or normalized == word
+            )
+        ):
+            return {
+                "type": "conversation",
+                "meaning": f"Yes, {item['english']}.",
+                "grammar": "Conversation answer",
+                "explanation": (
+                    f"'{item['japanese']}' means "
+                    f"'{item['english']}'."
+                ),
+                "followup": get_safe_followup(word),
+                "next_topic": None,
+            }
 
     if normalized == "iie":
-
         return {
             "type": "conversation",
             "meaning": "No.",
             "grammar": "はい / いいえ",
-            "explanation": (
-                "いいえ means 'no'."
-            ),
+            "explanation": "いいえ (iie) means 'no'.",
             "followup": "Try another simple answer.",
             "next_topic": None,
         }
 
     return None
 
-
 # ============================================================
-# KNOWN SENTENCE
+# KNOWN ROMAJI SENTENCES
 # ============================================================
 
 def check_known_sentence(text):
-
     normalized = normalize(text)
 
     if normalized not in KNOWN_SENTENCES:
         return None
 
     result = KNOWN_SENTENCES[normalized].copy()
-
     result["type"] = "known_sentence"
 
     if "gakusei" in normalized:
-
         result["followup"] = get_safe_followup("gakusei")
-
     elif "sensei" in normalized:
-
         result["followup"] = get_safe_followup("sensei")
-
     elif "isha" in normalized:
-
         result["followup"] = get_safe_followup("isha")
-
-    elif "kaishain" in normalized:
-
-        result["followup"] = get_safe_followup("kaishain")
-
     else:
-
-        result["followup"] = (
-            "Can you make another Japanese sentence?"
-        )
+        result["followup"] = get_safe_followup("kaishain")
 
     return result
 
@@ -729,16 +608,10 @@ def get_practice_questions():
 
 
 def check_practice_answer(answer, question):
-
     normalized = normalize(answer)
-
-    accepted = [
-        normalize(x)
-        for x in question["accepted"]
-    ]
+    accepted = [normalize(x) for x in question["accepted"]]
 
     if normalized in accepted:
-
         return {
             "correct": True,
             "message": "Correct! 🎉",
@@ -749,25 +622,20 @@ def check_practice_answer(answer, question):
         "correct": False,
         "message": "Not quite.",
         "correct_answer": question["accepted"][-1],
-        "explanation": (
-            "Try using the answer shown above."
-        ),
+        "explanation": "Try using the answer shown above.",
     }
 
-
 # ============================================================
-# VOCABULARY MODE
+# VOCABULARY PRACTICE
 # ============================================================
 
 VOCABULARY_PRACTICE = LESSON_1_VOCABULARY.copy()
 
 
 def get_vocabulary_questions():
-
     questions = []
 
     for item in VOCABULARY_PRACTICE:
-
         questions.append({
             "japanese": item["japanese"],
             "english": item["english"],
@@ -781,40 +649,208 @@ def get_vocabulary_questions():
         })
 
     random.shuffle(questions)
-
     return questions
 
 
 def check_vocabulary_answer(answer, question):
-
-    normalized = normalize(answer)
-
     if question["mode"] == "jp_to_en":
-
-        correct = normalize(question["english"])
-
+        expected = question["english"]
     else:
+        expected = question["japanese"]
 
-        correct = normalize(question["japanese"])
+    correct = normalize(answer) == normalize(expected)
 
-    if normalized == correct:
+    return {
+        "correct": correct,
+        "message": "Correct! 🎉" if correct else "Not quite.",
+        "correct_answer": expected,
+    }
 
+
+# ============================================================
+# JAPANESE SCRIPT RECOGNITION
+# ============================================================
+
+def analyze_japanese_script(text):
+    """
+    Recognize selected Japanese Lesson 1 sentences.
+    This is a limited rule-based recognizer, not a full translator.
+    """
+
+    normalized = _script_normalize(text)
+
+    # --------------------------------------------------------
+    # I am NOT a student.
+    # --------------------------------------------------------
+    negative_student_sentences = {
+        "わたしはがくせいじゃありません",
+        "私は学生じゃありません",
+        "わたしは学生じゃありません",
+        "私はがくせいじゃありません",
+        "わたしはがくせいではありません",
+        "私は学生ではありません",
+        "わたしは学生ではありません",
+        "私はがくせいではありません",
+    }
+
+    if normalized in negative_student_sentences:
         return {
-            "correct": True,
-            "message": "Correct! 🎉",
-            "correct_answer": (
-                question["english"]
-                if question["mode"] == "jp_to_en"
-                else question["japanese"]
+            "type": "known_sentence",
+            "meaning": "I am not a student.",
+            "romaji": "Watashi wa gakusei ja arimasen.",
+            "grammar": "N は N じゃありません",
+            "explanation": (
+                "わたし / 私 (watashi) means 'I'. "
+                "は (wa) marks the topic. "
+                "がくせい / 学生 (gakusei) means 'student'. "
+                "じゃありません (ja arimasen) is the polite "
+                "negative form used in noun sentences. "
+                "ではありません (dewa arimasen) is a more "
+                "formal alternative."
+            ),
+            "followup": (
+                "わたしはせんせいじゃありません。 "
+                "(Watashi wa sensei ja arimasen.) "
+                "— I am not a teacher."
             ),
         }
 
-    return {
-        "correct": False,
-        "message": "Not quite.",
-        "correct_answer": (
-            question["english"]
-            if question["mode"] == "jp_to_en"
-            else question["japanese"]
-        ),
+    # --------------------------------------------------------
+    # I am ALSO a student.
+    # --------------------------------------------------------
+    also_student_sentences = {
+        "わたしもがくせいです",
+        "私も学生です",
+        "わたしも学生です",
+        "私もがくせいです",
     }
+
+    if normalized in also_student_sentences:
+        return {
+            "type": "known_sentence",
+            "meaning": "I am also a student.",
+            "romaji": "Watashi mo gakusei desu.",
+            "grammar": "N も N です",
+            "explanation": (
+                "わたし / 私 (watashi) means 'I'. "
+                "も (mo) means 'also' or 'too' and replaces は "
+                "when expressing that something is also true. "
+                "がくせい / 学生 (gakusei) means 'student'. "
+                "です (desu) makes the statement polite."
+            ),
+            "followup": (
+                "あなたもがくせいですか。 "
+                "(Anata mo gakusei desu ka?) "
+                "— Are you also a student?"
+            ),
+        }
+
+    # --------------------------------------------------------
+    # I am a student.
+    # --------------------------------------------------------
+    student_sentences = {
+        "わたしはがくせいです",
+        "私は学生です",
+        "わたしは学生です",
+        "私はがくせいです",
+    }
+
+    if normalized in student_sentences:
+        return {
+            "type": "known_sentence",
+            "meaning": "I am a student.",
+            "romaji": "Watashi wa gakusei desu.",
+            "grammar": "N は N です",
+            "explanation": (
+                "わたし / 私 (watashi) means 'I'. "
+                "は (wa) marks the topic. "
+                "がくせい / 学生 (gakusei) means 'student'. "
+                "です (desu) makes the sentence polite."
+            ),
+            "followup": (
+                "あなたはがくせいですか。 "
+                "(Anata wa gakusei desu ka?) "
+                "— Are you a student?"
+            ),
+        }
+
+    # --------------------------------------------------------
+    # Self-introductions: I am Padma.
+    # --------------------------------------------------------
+    introductions = {
+        "わたしはパドマです",
+        "私はパドマです",
+        "わたしはパドマロチニです",
+        "私はパドマロチニです",
+        "こんにちはわたしはパドマです",
+        "こんにちは私はパドマです",
+        "こんにちはわたしはパドマロチニです",
+        "こんにちは私はパドマロチニです",
+    }
+
+    if normalized in introductions:
+        name = (
+            "Padma Lochini"
+            if "パドマロチニ" in normalized
+            else "Padma"
+        )
+
+        has_greeting = normalized.startswith("こんにちは")
+
+        if has_greeting:
+            romaji = (
+                "Konnichiwa. Watashi wa Padma Lochini desu."
+                if name == "Padma Lochini"
+                else "Konnichiwa. Watashi wa Padma desu."
+            )
+        else:
+            romaji = (
+                "Watashi wa Padma Lochini desu."
+                if name == "Padma Lochini"
+                else "Watashi wa Padma desu."
+            )
+
+        return {
+            "type": "known_sentence",
+            "meaning": (
+                f"Hello. I am {name}."
+                if has_greeting
+                else f"I am {name}."
+            ),
+            "romaji": romaji,
+            "grammar": "N は N です",
+            "explanation": (
+                "わたし / 私 (watashi) means 'I'. "
+                "は (wa) marks the topic of the sentence. "
+                "パドマ is Padma written in katakana. "
+                "です (desu) makes the statement polite. "
+                "です is not a possessive particle."
+            ),
+            "followup": (
+                "はじめまして。どうぞよろしくお願いします。 "
+                "(Hajimemashite. Douzo yoroshiku onegaishimasu.) "
+                "— Nice to meet you."
+            ),
+        }
+
+    # --------------------------------------------------------
+    # Greeting only
+    # --------------------------------------------------------
+    if normalized == "こんにちは":
+        return {
+            "type": "known_sentence",
+            "meaning": "Hello. / Good afternoon.",
+            "romaji": "Konnichiwa.",
+            "grammar": "Greeting",
+            "explanation": (
+                "こんにちは (konnichiwa) is a common "
+                "Japanese greeting."
+            ),
+            "followup": (
+                "おげんきですか。 "
+                "(Ogenki desu ka?) — How are you?"
+            ),
+        }
+
+    return None
+
