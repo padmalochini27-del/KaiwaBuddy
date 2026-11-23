@@ -150,4 +150,4 @@ Contributions and suggestions are welcome!
 
 ---
 
-*Built with curiosity, local AI, and a love for learning Japanese.* 🌸
+*Built with curiosity and a love for learning Japanese.* 🌸
