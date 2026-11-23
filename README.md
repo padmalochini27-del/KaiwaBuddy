@@ -1,6 +1,6 @@
 # 🌸 KaiwaBuddy — Your Local AI Japanese Conversation Partner
 
-**Learn Japanese through conversation, grammar explanations, and practice — powered by local AI.**
+**Learn Japanese through conversation, grammar explanations, and practice**
 
 KaiwaBuddy is a beginner-friendly Japanese learning assistant built with Python, Streamlit, Ollama, and Gemma 3 1B. It helps learners practise basic Japanese, explore vocabulary and grammar, and interact with a locally running AI model.
 
